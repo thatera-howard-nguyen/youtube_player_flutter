@@ -177,14 +177,20 @@
       function handleFullScreenForMobilePlatform() {
         try {
           var ytFrame = document.getElementsByTagName('iframe')[0].contentWindow.document;
+          var fsButton =
+            ytFrame.getElementsByClassName('ytp-fullscreen-button ytp-button')[0] ||
+            ytFrame.querySelector('.fullscreen-icon');
 
-          ytFrame.addEventListener('click', function(e) {
-            if (e.target.closest('.fullscreen-icon')) {
-              e.stopPropagation();
-              e.preventDefault();
+          if (fsButton != null) {
+            // Clone + replace strips YouTube's own click handler so its native
+            // (web-based) fullscreen never fires; only our handler runs, which
+            // hands control to the app so it can present its own fullscreen UI.
+            var fsButtonCopy = fsButton.cloneNode(true);
+            fsButton.replaceWith(fsButtonCopy);
+            fsButtonCopy.onclick = function () {
               sendMessage('FullscreenButtonPressed', '');
-            }
-          }, true);
+            };
+          }
         } catch (e) {
           console.warn('youtube_player: fullscreen button setup failed', e);
         }
